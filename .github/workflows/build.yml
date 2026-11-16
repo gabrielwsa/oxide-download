@@ -1,0 +1,208 @@
+# Builds Oxide's installers here, in the PUBLIC downloads repository, and
+# publishes them as a release of this repository.
+#
+# Why here: GitHub-hosted runners are free for public repositories (macOS
+# included), while the private code repository has a monthly quota. The source
+# code stays private: it is checked out with a read-only token and never
+# published; only the installers are. Build logs are public, so nothing in
+# this workflow prints secrets or source code.
+#
+# Run it by pushing a version tag to THIS repository:
+#   git tag v0.2.0 && git push origin v0.2.0
+# or from Actions → Build → Run workflow.
+# The code is taken from the same tag in gabrielwsa/RequestPost if it exists,
+# otherwise from its main branch (or from the ref given when run by hand).
+#
+# Needs, in this repository: Settings → Secrets and variables → Actions →
+#   secret SOURCE_TOKEN: fine-grained token with "Contents: Read-only" on
+#   gabrielwsa/RequestPost only.
+#
+# How it publishes: a draft release is created first, every build uploads its
+# installers to it, and the last job publishes it. A failed build leaves only a
+# draft, which the in-app updater never sees.
+name: Build
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão (ex.: 0.2.0)'
+        required: true
+      ref:
+        description: 'Branch, tag ou commit do código (vazio = a tag vVERSÃO, ou main)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}-${{ github.event.inputs.version }}
+  cancel-in-progress: true
+
+env:
+  SOURCE_REPO: gabrielwsa/RequestPost
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      ref: ${{ steps.ref.outputs.ref }}
+    steps:
+      - name: Versão
+        id: version
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          [ -z "$VERSION" ] && VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Conferir o token do código
+        env:
+          TOKEN: ${{ secrets.SOURCE_TOKEN }}
+        run: |
+          [ -n "$TOKEN" ] || { echo "::error::Secret SOURCE_TOKEN não encontrado. Crie em Settings → Secrets and variables → Actions (neste repositório) um token fine-grained com Contents: Read-only no repositório do código."; exit 1; }
+
+      # Which commit of the private code to build.
+      - name: Versão do código
+        id: ref
+        env:
+          GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
+          INPUT_REF: ${{ github.event.inputs.ref }}
+        run: |
+          REF="$INPUT_REF"
+          if [ -z "$REF" ]; then
+            if gh api "repos/$SOURCE_REPO/git/ref/tags/v$VERSION" >/dev/null 2>&1; then REF="v$VERSION"; else REF="main"; fi
+          fi
+          echo "Código: $SOURCE_REPO @ $REF"
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+
+      - name: Notas da versão
+        run: |
+          {
+            echo "## Downloads"
+            echo
+            echo "| Sistema | Arquivo |"
+            echo "|---|---|"
+            echo "| **Windows** | \`Oxide-Setup-$VERSION.exe\` |"
+            echo "| **macOS (Apple Silicon)** | \`Oxide-$VERSION-arm64.dmg\` |"
+            echo "| **Arch Linux** | \`Oxide-$VERSION-x86_64.pkg.tar.xz\` → \`sudo pacman -U Oxide-*.pkg.tar.xz\` |"
+            echo "| **Linux** (qualquer distro) | \`Oxide-$VERSION.AppImage\` |"
+            echo
+            echo 'Os arquivos "Source code" abaixo são gerados automaticamente pelo GitHub e contêm apenas o README deste repositório.'
+          } > notes.md
+
+      # A draft from an earlier failed run of the same version is reused (its files are replaced).
+      - name: Criar rascunho do release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "v$VERSION" --repo "$GITHUB_REPOSITORY" --draft --title "Oxide $VERSION" --notes-file notes.md
+          else
+            gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --draft --title "Oxide $VERSION" --notes-file notes.md
+          fi
+
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: --linux AppImage pacman
+            # latest-linux.yml: read by the in-app updater (AppImage).
+            files: |
+              app/dist/*.AppImage
+              app/dist/*.pkg.tar.xz
+              app/dist/latest-linux.yml
+          - os: windows-latest
+            target: --win nsis
+            # latest.yml + blockmap: read by the in-app updater (NSIS).
+            files: |
+              app/dist/*.exe
+              app/dist/latest.yml
+              app/dist/*.exe.blockmap
+          - os: macos-latest # Apple Silicon (arm64)
+            target: --mac dmg
+            files: app/dist/*.dmg
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - name: Código (repositório privado)
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.SOURCE_REPO }}
+          ref: ${{ needs.prepare.outputs.ref }}
+          token: ${{ secrets.SOURCE_TOKEN }}
+          # The token is only needed for this checkout: don't keep it in .git/config.
+          persist-credentials: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # Keeps compiled Rust dependencies between runs: only our crates rebuild.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: build-${{ runner.os }}
+
+      # The Arch package (pacman) is built with fpm, which needs bsdtar and xz.
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libarchive-tools xz-utils
+
+      # aws-lc-rs (TLS) needs NASM to build on Windows.
+      - if: runner.os == 'Windows'
+        uses: ilammy/setup-nasm@v1
+
+      - name: Versão no package.json
+        shell: bash
+        run: npm pkg set version="$VERSION" -w app
+
+      - run: npm ci
+
+      - name: Motor Rust (napi-rs)
+        run: npm run build:native
+
+      - name: App e instalador
+        run: npm run build -w app && npx --workspace app electron-builder ${{ matrix.target }} --publish never
+        env:
+          # No code signing yet: installers are unsigned.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Enviar instaladores para o rascunho
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FILES: ${{ matrix.files }}
+        run: |
+          shopt -s nullglob
+          files=()
+          while IFS= read -r pattern; do
+            [ -n "$pattern" ] || continue
+            matches=($pattern)
+            [ ${#matches[@]} -gt 0 ] || { echo "::error::Nenhum arquivo para $pattern"; exit 1; }
+            files+=("${matches[@]}")
+          done <<< "$FILES"
+          printf 'Enviando: %s\n' "${files[@]}"
+          gh release upload "v$VERSION" "${files[@]}" --repo "$GITHUB_REPOSITORY" --clobber
+
+  publish:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Publicar o release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: gh release edit "v$VERSION" --repo "$GITHUB_REPOSITORY" --draft=false --latest
