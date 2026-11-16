@@ -10,12 +10,12 @@
 # Run it by pushing a version tag to THIS repository:
 #   git tag v0.2.0 && git push origin v0.2.0
 # or from Actions → Build → Run workflow.
-# The code is taken from the same tag in gabrielwsa/RequestPost if it exists,
+# The code is taken from the same tag in gabrielwsa/Oxide if it exists,
 # otherwise from its main branch (or from the ref given when run by hand).
 #
 # Needs, in this repository: Settings → Secrets and variables → Actions →
 #   secret SOURCE_TOKEN: fine-grained token with "Contents: Read-only" on
-#   gabrielwsa/RequestPost only.
+#   gabrielwsa/Oxide only.
 #
 # How it publishes: a draft release is created first, every build uploads its
 # installers to it, and the last job publishes it. A failed build leaves only a
@@ -43,7 +43,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SOURCE_REPO: gabrielwsa/RequestPost
+  SOURCE_REPO: gabrielwsa/Oxide
 
 jobs:
   prepare:
