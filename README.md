@@ -5,36 +5,48 @@
 <h1 align="center">Oxide</h1>
 
 <p align="center">
-  Cliente de APIs para desktop: requisições, coleções, scripts, Flows, mock servers e Catálogo de APIs.<br>
-  <sub>Antes chamado RequestPost.</sub>
+  A desktop API client: send requests, organize collections, write tests,<br>
+  run mock servers and share your workspace with your team.
 </p>
 
 <p align="center">
-  <a href="../../releases/latest"><b>⬇ Baixar a versão mais recente</b></a>
+  <a href="../../releases/latest"><b>⬇ Download the latest version</b></a>
 </p>
 
 ---
 
-## Instalação
+## Download
 
-Abra a [página de releases](../../releases/latest) e baixe o arquivo do seu sistema:
+Pick the file for your computer on the [latest release](../../releases/latest):
 
-| Sistema | Arquivo | Como instalar |
-|---|---|---|
-| **Windows** | `Oxide-Setup-x.y.z.exe` | Execute o instalador. Se aparecer "O Windows protegeu o computador", clique em **Mais informações → Executar assim mesmo**. |
-| **Arch Linux** | `Oxide-x.y.z-x86_64.pkg.tar.xz` | `sudo pacman -U Oxide-*.pkg.tar.xz` (aparece no menu de aplicativos; remova com `sudo pacman -R Oxide`). Substitui o pacote antigo `RequestPost`. |
-| **Linux** (qualquer distro) | `Oxide-x.y.z.AppImage` | `chmod +x Oxide-*.AppImage` e execute. Na primeira vez ele cria o atalho no menu de aplicativos. |
-| **macOS** (Apple Silicon) | `Oxide-x.y.z-arm64.dmg` | Arraste para Aplicativos. Na primeira vez, clique com o botão direito no app → **Abrir**. Nem toda versão tem instalador para macOS: use o da versão mais recente que tiver. |
+| System | File |
+|---|---|
+| **Windows** | `Oxide-Setup-x.y.z.exe` |
+| **macOS** — Apple Silicon (M1, M2…) | `Oxide-x.y.z-arm64.dmg` |
+| **macOS** — Intel | `Oxide-x.y.z-x64.dmg` |
+| **Linux** — any distribution | `Oxide-x.y.z.AppImage` |
+| **Linux** — Arch | `Oxide-x.y.z-x86_64.pkg.tar.xz` |
 
-Os instaladores ainda não têm assinatura digital, por isso o Windows e o macOS pedem confirmação na primeira execução.
+Not sure which Mac you have? Open the Apple menu → **About This Mac**: it says "Apple chip" or "Intel".
 
-### Atualizações
+## Install
 
-A partir da versão 0.1.9 o app procura versões novas sozinho (ao abrir e a cada 4 horas) e mostra um aviso no topo:
+- **Windows** — run the installer. If Windows says it protected your PC, click **More info → Run anyway**.
+- **macOS** — open the `.dmg` and drag Oxide to **Applications**. The first time, right-click the app and choose **Open**.
+- **Linux (AppImage)** — make the file executable (right-click → Properties → "Allow executing", or `chmod +x`) and open it. It adds itself to your applications menu.
+- **Arch Linux** — install it with `sudo pacman -U Oxide-*.pkg.tar.xz`.
 
-- **Windows** e **AppImage**: clique em **Atualizar**; a nova versão é baixada em segundo plano e instalada ao clicar em **Reiniciar e atualizar** (ou ao fechar o app).
-- **macOS** e **Arch Linux**: o aviso abre esta página para baixar a nova versão.
+The installers are not digitally signed yet, which is why Windows and macOS ask for confirmation the first time.
 
-Também dá para verificar em **Configurações → Atualizações → Verificar agora**.
+## Updates
 
-Os seus dados (coleções, ambientes, flows) ficam no seu computador. Quem usava o RequestPost não perde nada: na primeira vez que o Oxide abre, ele copia os dados da versão anterior.
+Oxide checks for new versions when it opens and every few hours, and shows a notice at the top of the window.
+On Windows, Linux and Arch it downloads and installs the update for you; on macOS it opens this page.
+After each update, a **What's new** window shows what changed.
+
+## Your data
+
+Your collections, environments and history stay on your computer.
+If you turn on Git versioning, they are also saved to the repository you choose (GitHub, GitLab…), and nowhere else.
+
+<sub>Formerly known as RequestPost. The "Source code" files GitHub attaches to each release only contain this page.</sub>

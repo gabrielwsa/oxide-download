@@ -86,14 +86,15 @@ jobs:
           {
             echo "## Downloads"
             echo
-            echo "| Sistema | Arquivo |"
+            echo "| System | File |"
             echo "|---|---|"
             echo "| **Windows** | \`Oxide-Setup-$VERSION.exe\` |"
-            echo "| **macOS (Apple Silicon)** | \`Oxide-$VERSION-arm64.dmg\` |"
-            echo "| **Arch Linux** | \`Oxide-$VERSION-x86_64.pkg.tar.xz\` → \`sudo pacman -U Oxide-*.pkg.tar.xz\` |"
-            echo "| **Linux** (qualquer distro) | \`Oxide-$VERSION.AppImage\` |"
+            echo "| **macOS** — Apple Silicon (M1, M2…) | \`Oxide-$VERSION-arm64.dmg\` |"
+            echo "| **macOS** — Intel | \`Oxide-$VERSION-x64.dmg\` |"
+            echo "| **Linux** — any distribution | \`Oxide-$VERSION.AppImage\` |"
+            echo "| **Linux** — Arch | \`Oxide-$VERSION-x86_64.pkg.tar.xz\` → \`sudo pacman -U Oxide-*.pkg.tar.xz\` |"
             echo
-            echo 'Os arquivos "Source code" abaixo são gerados automaticamente pelo GitHub e contêm apenas o README deste repositório.'
+            echo "Install instructions are on the [download page](https://github.com/$GITHUB_REPOSITORY#install). The \"Source code\" files below only contain that page."
           } > notes.md
 
       # A draft from an earlier failed run of the same version is reused (its files are replaced).
@@ -128,8 +129,11 @@ jobs:
               app/dist/latest.yml
               app/dist/*.exe.blockmap
           - os: macos-latest # Apple Silicon (arm64)
-            target: --mac dmg
-            files: app/dist/*.dmg
+            target: --mac dmg --arm64
+            files: app/dist/*-arm64.dmg
+          - os: macos-15-intel # Intel Macs (x64)
+            target: --mac dmg --x64
+            files: app/dist/*-x64.dmg
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     env:
