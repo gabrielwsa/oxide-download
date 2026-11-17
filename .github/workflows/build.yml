@@ -128,7 +128,7 @@ jobs:
               app/dist/*.exe
               app/dist/latest.yml
               app/dist/*.exe.blockmap
-          - os: macos-latest # Apple Silicon (arm64)
+          - os: macos-15 # Apple Silicon (arm64); a fixed label: "macos-latest" sometimes has no runners while it moves to a new image
             target: --mac dmg --arm64
             files: app/dist/*-arm64.dmg
           - os: macos-15-intel # Intel Macs (x64)
