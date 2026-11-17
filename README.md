@@ -47,6 +47,7 @@ Pick the file for your computer on the [latest release](../../releases/latest):
 | **macOS** — Apple Silicon (M1, M2…) | `Oxide-x.y.z-arm64.dmg` |
 | **macOS** — Intel | `Oxide-x.y.z-x64.dmg` |
 | **Linux** — any distribution | `Oxide-x.y.z.AppImage` |
+| **Linux** — Debian, Ubuntu, Mint… | `Oxide-x.y.z-amd64.deb` |
 | **Linux** — Arch | `Oxide-x.y.z-x86_64.pkg.tar.xz` |
 
 Not sure which Mac you have? Open the Apple menu → **About This Mac**: it says "Apple chip" or "Intel".
@@ -58,6 +59,7 @@ Not sure which Mac you have? Open the Apple menu → **About This Mac**: it says
   go to **System Settings → Privacy & Security**, scroll down to the message about Oxide and click **Open Anyway**.
   Or run this in the Terminal: `xattr -dr com.apple.quarantine /Applications/Oxide.app`
 - **Linux (AppImage)** — make the file executable (right-click → Properties → "Allow executing", or `chmod +x`) and open it. It adds itself to your applications menu.
+- **Debian, Ubuntu, Mint…** — open the `.deb` with your software center, or run `sudo apt install ./Oxide-*.deb`.
 - **Arch Linux** — install it with `sudo pacman -U Oxide-*.pkg.tar.xz`.
 
 The installers are not digitally signed yet, which is why Windows and macOS ask for confirmation the first time.
@@ -65,7 +67,7 @@ The installers are not digitally signed yet, which is why Windows and macOS ask 
 ## Updates
 
 Oxide checks for new versions when it opens and every few hours, and shows a notice at the top of the window.
-On Windows, Linux and Arch it downloads and installs the update for you; on macOS it opens this page.
+On Windows and Linux it downloads and installs the update for you; on macOS it opens this page.
 After each update, a **What's new** window shows what changed.
 
 ## Your data

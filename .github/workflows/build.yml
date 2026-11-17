@@ -92,6 +92,7 @@ jobs:
             echo "| **macOS** — Apple Silicon (M1, M2…) | \`Oxide-$VERSION-arm64.dmg\` |"
             echo "| **macOS** — Intel | \`Oxide-$VERSION-x64.dmg\` |"
             echo "| **Linux** — any distribution | \`Oxide-$VERSION.AppImage\` |"
+            echo "| **Linux** — Debian, Ubuntu, Mint… | \`Oxide-$VERSION-amd64.deb\` → \`sudo apt install ./Oxide-*.deb\` |"
             echo "| **Linux** — Arch | \`Oxide-$VERSION-x86_64.pkg.tar.xz\` → \`sudo pacman -U Oxide-*.pkg.tar.xz\` |"
             echo
             echo "Install instructions are on the [download page](https://github.com/$GITHUB_REPOSITORY#install). The \"Source code\" files below only contain that page."
@@ -115,11 +116,12 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            target: --linux AppImage pacman
+            target: --linux AppImage pacman deb
             # latest-linux.yml: read by the in-app updater (AppImage).
             files: |
               app/dist/*.AppImage
               app/dist/*.pkg.tar.xz
+              app/dist/*.deb
               app/dist/latest-linux.yml
           - os: windows-latest
             target: --win nsis
