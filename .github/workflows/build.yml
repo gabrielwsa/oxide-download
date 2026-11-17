@@ -172,7 +172,20 @@ jobs:
         shell: bash
         run: npm pkg set version="$VERSION" -w app
 
-      - run: npm ci
+      # The npm registry sometimes drops the connection on the runners
+      # (ECONNRESET): retry instead of failing the whole build.
+      - name: npm ci
+        shell: bash
+        run: |
+          npm config set fetch-retries 5
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+          for i in 1 2 3; do
+            npm ci && exit 0
+            echo "npm ci falhou (tentativa $i), tentando de novo…"
+            sleep $((i * 15))
+          done
+          exit 1
 
       - name: Motor Rust (napi-rs)
         run: npm run build:native
